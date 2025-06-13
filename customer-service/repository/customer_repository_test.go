@@ -1,6 +1,7 @@
 package repository_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
@@ -10,7 +11,7 @@ import (
 
 func TestCreateCustomerValidation(t *testing.T) {
 	db := repository.New()
-	validUUID := uuid.New().String()
+	validId := uuid.New().String()
 	tests := []struct {
 		name      string
 		customer  model.Customer
@@ -19,7 +20,7 @@ func TestCreateCustomerValidation(t *testing.T) {
 		{
 			name: "valid customer",
 			customer: model.Customer{
-				Id:   validUUID,
+				Id:   validId,
 				Name: "Oli",
 			},
 			expectErr: false,
@@ -43,7 +44,7 @@ func TestCreateCustomerValidation(t *testing.T) {
 		{
 			name: "missing name",
 			customer: model.Customer{
-				Id:   validUUID,
+				Id:   validId,
 				Name: "",
 			},
 			expectErr: true,
@@ -62,4 +63,63 @@ func TestCreateCustomerValidation(t *testing.T) {
 		})
 	}
 
+}
+func TestGetValidId(t *testing.T) {
+	validId := uuid.New().String()
+	expectedCustomer := model.Customer{
+		Id:   validId,
+		Name: "Oli",
+	}
+
+	db := &repository.InMemDb{
+		Store: map[string]model.Customer{
+			validId: expectedCustomer,
+		},
+	}
+
+	c, err := db.GetById(validId)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if c == nil {
+		t.Fatal("expected customer, got nil")
+	}
+	if *c != expectedCustomer {
+		t.Errorf("got %+v, want %+v", *c, expectedCustomer)
+	}
+}
+func TestGetInvalidUUID(t *testing.T) {
+	invalidID := "not-a-uuid"
+
+	db := &repository.InMemDb{
+		Store: map[string]model.Customer{},
+	}
+
+	c, err := db.GetById(invalidID)
+	if err == nil {
+		t.Fatal("expected error for invalid UUID, got nil")
+	}
+	if c != nil {
+		t.Errorf("expected nil customer, got %+v", c)
+	}
+}
+func TestGetByIdNotFound(t *testing.T) {
+	missingID := uuid.NewString()
+
+	db := &repository.InMemDb{
+		Store: map[string]model.Customer{},
+	}
+
+	c, err := db.GetById(missingID)
+	if err == nil {
+		t.Fatal("expected error for missing customer, got nil")
+	}
+
+	expectedErr := fmt.Sprintf("customer with ID %s not found", missingID)
+	if err.Error() != expectedErr {
+		t.Errorf("unexpected error: got %v, want %v", err.Error(), expectedErr)
+	}
+	if c != nil {
+		t.Errorf("expected nil customer, got %+v", c)
+	}
 }
