@@ -63,7 +63,7 @@ func TestGetList(t *testing.T) {
 			Id:          "fund-id-2",
 			Name:        "fund-name-2",
 			Description: "fund-description-2",
-			RiskLevel:   "risk-level-2",
+			RiskLevel:   "risk-level",
 		},
 	}
 	mockRepo := &mockRepo{
@@ -74,16 +74,16 @@ func TestGetList(t *testing.T) {
 
 	svc := service.New(mockRepo)
 
-	funds, err := svc.GetFundList()
+	funds, err := svc.GetFundList("risk-level")
 
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
 
-	if len(*funds) == 0 {
-		t.Errorf("expected funds length of : %d, got %d", len(expectedFundList), len(*funds))
+	if len(funds) == 0 {
+		t.Errorf("expected funds length of : %d, got %d", len(expectedFundList), len(funds))
 	}
-	if len(*funds) != len(expectedFundList) {
-		t.Errorf("got %+v, want %+v", *funds, expectedFundList)
+	if len(funds) != len(expectedFundList) {
+		t.Errorf("got %+v, want %+v", funds, expectedFundList)
 	}
 }

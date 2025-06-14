@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/oliknight1/retail-isa-investment/fund-service/model"
 	"github.com/oliknight1/retail-isa-investment/fund-service/repository"
@@ -29,6 +30,17 @@ func (s *FundServiceImpl) GetFundById(id string) (*model.Fund, error) {
 	return s.repo.GetFundById(id)
 }
 
-func (s *FundServiceImpl) GetFundList() (*[]model.Fund, error) {
-	return s.repo.GetFundList()
+func (s *FundServiceImpl) GetFundList(riskLevel string) ([]model.Fund, error) {
+	allFunds, err := s.repo.GetFundList()
+	if err != nil {
+		return nil, err
+	}
+	var appropiateFunds []model.Fund
+	for _, fund := range *allFunds {
+		if strings.Compare(fund.RiskLevel, riskLevel) == 0 {
+			appropiateFunds = append(appropiateFunds, fund)
+		}
+	}
+
+	return appropiateFunds, nil
 }
