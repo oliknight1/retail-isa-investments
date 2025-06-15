@@ -1,9 +1,12 @@
 package service_test
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/uuid"
 	"github.com/oliknight1/retail-isa-investment/fund-service/model"
 	"github.com/oliknight1/retail-isa-investment/fund-service/service"
 )
@@ -20,9 +23,9 @@ func (m *mockRepo) GetFundList() (*[]model.Fund, error) {
 	return m.getFundList()
 }
 
-func TestGetById(t *testing.T) {
+func TestGetByIdSuccess(t *testing.T) {
 	expectedFund := model.Fund{
-		Id:          "fund-id",
+		Id:          uuid.New().String(),
 		Name:        "fund-name",
 		Description: "fund-description",
 		RiskLevel:   "risk-level",
@@ -52,7 +55,70 @@ func TestGetById(t *testing.T) {
 
 }
 
-func TestGetList(t *testing.T) {
+func TestGetByIdInvalidId(t *testing.T) {
+	mockRepo := &mockRepo{
+		getFundByIdFn: func(id string) (*model.Fund, error) {
+			t.Fatal("repo.GetFundById should NOT be called for invalid UUID")
+			return nil, nil
+		},
+	}
+
+	svc := service.New(mockRepo)
+
+	_, err := svc.GetFundById("invalid-uuid")
+
+	if err == nil {
+		t.Error("expected error for invalid UUID")
+		return
+	}
+
+	if !strings.Contains(err.Error(), "invalid UUID") {
+		t.Errorf("expected invalid UUID error, got: %v", err)
+	}
+
+}
+func TestGetFundByIdEmptyID(t *testing.T) {
+	mockRepo := &mockRepo{
+		getFundByIdFn: func(id string) (*model.Fund, error) {
+			t.Fatal("repo.GetFundById should NOT be called for empty ID")
+			return nil, nil
+		},
+	}
+	svc := service.New(mockRepo)
+
+	_, err := svc.GetFundById("")
+
+	if err == nil {
+		t.Error("expected error for empty fund id")
+		return
+	}
+
+	if err.Error() != "fund id is required" {
+		t.Errorf("expected 'fund id is required' error, got: %v", err)
+	}
+}
+
+func TestGetFundByIdNotFound(t *testing.T) {
+	mockRepo := &mockRepo{
+		getFundByIdFn: func(id string) (*model.Fund, error) {
+			return nil, fmt.Errorf("fund with id: %s not found", id)
+		},
+	}
+	svc := service.New(mockRepo)
+
+	_, err := svc.GetFundById("123e4567-e89b-12d3-a456-426614174000") // valid UUID
+
+	if err == nil {
+		t.Error("expected error for fund not found")
+		return
+	}
+
+	if !strings.Contains(err.Error(), "not found") {
+		t.Errorf("expected not found error, got: %v", err)
+	}
+}
+
+func TestGetListSuccess(t *testing.T) {
 	expectedFundList := []model.Fund{
 		{
 			Id:          "fund-id",
@@ -84,6 +150,7 @@ func TestGetList(t *testing.T) {
 	if len(funds) == 0 {
 		t.Errorf("expected funds length of : %d, got %d", len(expectedFundList), len(funds))
 	}
+	//TODO: proper equivilance test
 	if len(funds) != len(expectedFundList) {
 		t.Errorf("got %+v, want %+v", funds, expectedFundList)
 	}
