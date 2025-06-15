@@ -3,7 +3,9 @@ package service
 import (
 	"errors"
 	"fmt"
+	"log"
 
+	"github.com/google/uuid"
 	"github.com/oliknight1/retail-isa-investment/fund-service/model"
 	"github.com/oliknight1/retail-isa-investment/fund-service/repository"
 )
@@ -26,6 +28,10 @@ func New(repo repository.Repository) *FundServiceImpl {
 func (s *FundServiceImpl) GetFundById(id string) (*model.Fund, error) {
 	if id == "" {
 		return nil, errors.New("fund id is required")
+	}
+	if err := uuid.Validate(id); err != nil {
+		log.Printf("invalid UUID provided: %s, error: %v", id, err)
+		return nil, err
 	}
 	return s.repo.GetFundById(id)
 }
