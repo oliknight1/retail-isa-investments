@@ -3,6 +3,7 @@ package service_test
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/oliknight1/retail-isa-investment/fund-service/model"
 	"github.com/oliknight1/retail-isa-investment/fund-service/service"
 )
@@ -57,13 +58,13 @@ func TestGetList(t *testing.T) {
 			Id:          "fund-id",
 			Name:        "fund-name",
 			Description: "fund-description",
-			RiskLevel:   "risk-level",
+			RiskLevel:   "Low",
 		},
 		{
 			Id:          "fund-id-2",
 			Name:        "fund-name-2",
 			Description: "fund-description-2",
-			RiskLevel:   "risk-level",
+			RiskLevel:   "Low",
 		},
 	}
 	mockRepo := &mockRepo{
@@ -74,7 +75,7 @@ func TestGetList(t *testing.T) {
 
 	svc := service.New(mockRepo)
 
-	funds, err := svc.GetFundList("risk-level")
+	funds, err := svc.GetFundList("Low")
 
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
@@ -85,5 +86,95 @@ func TestGetList(t *testing.T) {
 	}
 	if len(funds) != len(expectedFundList) {
 		t.Errorf("got %+v, want %+v", funds, expectedFundList)
+	}
+}
+func TestGetFundListFiltersRiskLevel(t *testing.T) {
+	tests := []struct {
+		name             string
+		riskLevel        string
+		fundList         []model.Fund
+		expectedFundList []model.Fund
+		expectErr        bool
+	}{
+		{
+			name:      "filters out funds above Medium",
+			riskLevel: "Medium",
+			fundList: []model.Fund{
+				{Id: "1", Name: "Fund 1", RiskLevel: "Low"},
+				{Id: "2", Name: "Fund 2", RiskLevel: "Low"},
+				{Id: "3", Name: "Fund 3", RiskLevel: "Medium"},
+				{Id: "4", Name: "Fund 4", RiskLevel: "High"},
+			},
+			expectedFundList: []model.Fund{
+				{Id: "1", Name: "Fund 1", RiskLevel: "Low"},
+				{Id: "2", Name: "Fund 2", RiskLevel: "Low"},
+				{Id: "3", Name: "Fund 3", RiskLevel: "Medium"},
+			},
+			expectErr: false,
+		},
+		{
+			name:      "includes all when riskLevel is High",
+			riskLevel: "High",
+			fundList: []model.Fund{
+				{Id: "1", Name: "Fund 1", RiskLevel: "Low"},
+				{Id: "2", Name: "Fund 2", RiskLevel: "Medium"},
+				{Id: "3", Name: "Fund 3", RiskLevel: "High"},
+			},
+			expectedFundList: []model.Fund{
+				{Id: "1", Name: "Fund 1", RiskLevel: "Low"},
+				{Id: "2", Name: "Fund 2", RiskLevel: "Medium"},
+				{Id: "3", Name: "Fund 3", RiskLevel: "High"},
+			},
+			expectErr: false,
+		},
+		{
+			name:      "filters out all when riskLevel is Low",
+			riskLevel: "Low",
+			fundList: []model.Fund{
+				{Id: "1", Name: "Fund 1", RiskLevel: "Medium"},
+				{Id: "2", Name: "Fund 2", RiskLevel: "High"},
+			},
+			expectedFundList: []model.Fund{},
+			expectErr:        false,
+		},
+		{
+			name:      "invalid risk level: lowercase input",
+			riskLevel: "medium",
+			fundList: []model.Fund{
+				{Id: "1", Name: "Fund 1", RiskLevel: "Low"},
+				{Id: "2", Name: "Fund 2", RiskLevel: "Medium"},
+			},
+			expectedFundList: nil,
+			expectErr:        true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mock := &mockRepo{
+				getFundList: func() (*[]model.Fund, error) {
+					return &tt.fundList, nil
+				},
+			}
+
+			svc := service.New(mock)
+
+			actual, err := svc.GetFundList(tt.riskLevel)
+
+			if tt.expectErr {
+				if err == nil {
+					t.Errorf("expected error but got nil")
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+				return
+			}
+
+			if diff := cmp.Diff(tt.expectedFundList, actual); diff != "" {
+				t.Errorf("unexpected fund list (-want +got):\n%s", diff)
+			}
+		})
 	}
 }
