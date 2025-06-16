@@ -50,14 +50,10 @@ func (h *FundHandler) GetFundById(w http.ResponseWriter, r *http.Request) {
 	fund, err := h.Service.GetFundById(fundId)
 
 	if err != nil {
-		switch {
-		case errors.Is(err, internal.ErrInvalidId):
-			http.Error(w, internal.ErrInvalidId.Error(), http.StatusBadRequest)
-			return
-		case errors.Is(err, internal.ErrFundNotFound):
+		if errors.Is(err, internal.ErrFundNotFound) {
 			http.Error(w, internal.FundNotFoundError(fundId).Error(), http.StatusNotFound)
 			return
-		default:
+		} else {
 			fmt.Println(err)
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
@@ -68,9 +64,13 @@ func (h *FundHandler) GetFundById(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *FundHandler) GetFundList(w http.ResponseWriter, r *http.Request) {
-	riskLevel := r.URL.Query().Get("riskLevel")
+	var riskLevel *string
+	risk := r.URL.Query().Get("riskLevel")
+	if risk != "" {
+		riskLevel = &risk
+	}
 
-	funds, err := h.Service.GetFundList(&riskLevel)
+	funds, err := h.Service.GetFundList(riskLevel)
 	if err != nil {
 		if errors.Is(err, internal.ErrInvalidRisklevel) {
 			http.Error(w, internal.ErrInvalidRisklevel.Error(), http.StatusBadRequest)
