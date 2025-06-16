@@ -16,13 +16,13 @@ import (
 
 type mockService struct {
 	getFundById func(id string) (*model.Fund, error)
-	getFundList func(riskLevel string) (*[]model.Fund, error)
+	getFundList func(riskLevel *string) (*[]model.Fund, error)
 }
 
 func (s *mockService) GetFundById(id string) (*model.Fund, error) {
 	return s.getFundById(id)
 }
-func (s *mockService) GetFundList(riskLevel string) (*[]model.Fund, error) {
+func (s *mockService) GetFundList(riskLevel *string) (*[]model.Fund, error) {
 	return s.getFundList(riskLevel)
 }
 

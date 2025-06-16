@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -18,6 +19,18 @@ type FundHandler struct {
 
 func New(service service.FundService) *FundHandler {
 	return &FundHandler{service}
+}
+
+func writeJson(w http.ResponseWriter, data interface{}) {
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(data); err != nil {
+		log.Printf("failed to encode JSON: %v", err)
+		http.Error(w, "failed to encode response", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(buf.Bytes())
 }
 
 func (h *FundHandler) GetFundById(w http.ResponseWriter, r *http.Request) {
@@ -51,9 +64,19 @@ func (h *FundHandler) GetFundById(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(fund); err != nil {
-		log.Printf("failed to encode JSON: %v", err)
+	writeJson(w, fund)
+}
+
+func (h *FundHandler) GetFundList(w http.ResponseWriter, r *http.Request) {
+	riskLevel := r.URL.Query().Get("riskLevel")
+
+	funds, err := h.Service.GetFundList(&riskLevel)
+	if err != nil {
+		if errors.Is(err, internal.ErrInvalidRisklevel) {
+			http.Error(w, internal.ErrInvalidRisklevel.Error(), http.StatusBadRequest)
+		}
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 	}
+	writeJson(w, funds)
+
 }
