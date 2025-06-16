@@ -1,0 +1,32 @@
+[
+  {
+    "id": "fund-ftse-100",
+    "name": "FTSE 100 Index Fund",
+    "description": "Tracks the performance of the 100 largest UK companies listed on the London Stock Exchange.",
+    "riskLevel": "Medium"
+  },
+  {
+    "id": "fund-sp-500",
+    "name": "S&P 500 Index Fund",
+    "description": "Tracks the performance of 500 large US companies listed on stock exchanges.",
+    "riskLevel": "Medium"
+  },
+  {
+    "id": "fund-global-bond",
+    "name": "Global Bond Fund",
+    "description": "Invests in government and corporate bonds across global markets.",
+    "riskLevel": "Low"
+  },
+  {
+    "id": "fund-emerging-markets",
+    "name": "Emerging Markets Equity Fund",
+    "description": "Invests in companies based in developing economies.",
+    "riskLevel": "High"
+  },
+  {
+    "id": "fund-technology",
+    "name": "Global Technology Fund",
+    "description": "Focuses on companies in the technology sector worldwide.",
+    "riskLevel": "High"
+  }
+]
