@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/oliknight1/retail-isa-investment/fund-service/internal"
 	"github.com/oliknight1/retail-isa-investment/fund-service/model"
 )
 
@@ -15,7 +14,7 @@ type Repository interface {
 }
 
 type FundClient struct {
-	Funds map[string]model.Fund
+	Funds []model.Fund
 }
 
 // NOTE: replace with a client that fetches / listens to external service providing the fund list
@@ -34,18 +33,18 @@ func NewFundClient(path string) (*FundClient, error) {
 		log.Printf("error deconding fund data: %v", err)
 		return nil, err
 	}
-	fundMap := make(map[string]model.Fund)
-	for _, fund := range fundList {
-		fundMap[fund.Id] = fund
-	}
 
-	return &FundClient{Funds: fundMap}, nil
+	return &FundClient{Funds: fundList}, nil
 }
 
 func (c *FundClient) GetFundById(id string) (*model.Fund, error) {
-	fund, ok := c.Funds[id]
-	if !ok {
-		return nil, internal.FundNotFoundError(id)
+	var foundFund *model.Fund
+	for _, fund := range c.Funds {
+		if fund.Id == id {
+			foundFund = &fund
+			break
+		}
 	}
-	return &fund, nil
+	return foundFund, nil
+}
 }
