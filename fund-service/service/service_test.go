@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
+	"github.com/oliknight1/retail-isa-investment/fund-service/internal"
 	"github.com/oliknight1/retail-isa-investment/fund-service/model"
 	"github.com/oliknight1/retail-isa-investment/fund-service/service"
 )
@@ -58,7 +59,7 @@ func TestGetByIdSuccess(t *testing.T) {
 func TestGetByIdInvalidId(t *testing.T) {
 	mockRepo := &mockRepo{
 		getFundByIdFn: func(id string) (*model.Fund, error) {
-			t.Fatal("repo.GetFundById should NOT be called for invalid UUID")
+			t.Fatal("repo.GetFundById should not be called for invalid UUID")
 			return nil, nil
 		},
 	}
@@ -72,8 +73,9 @@ func TestGetByIdInvalidId(t *testing.T) {
 		return
 	}
 
-	if !strings.Contains(err.Error(), "invalid UUID") {
-		t.Errorf("expected invalid UUID error, got: %v", err)
+	//TODO: error msg incorrect
+	if err != internal.ErrInvalidId {
+		t.Errorf("expected %s error, got: %v", internal.ErrInvalidId, err)
 	}
 
 }
@@ -93,11 +95,10 @@ func TestGetFundByIdEmptyID(t *testing.T) {
 		return
 	}
 
-	if err.Error() != "fund id is required" {
-		t.Errorf("expected 'fund id is required' error, got: %v", err)
+	if err.Error() != internal.ErrMissingId.Error() {
+		t.Errorf("expected '%s' error, got: %v", internal.ErrMissingId, err)
 	}
 }
-
 func TestGetFundByIdNotFound(t *testing.T) {
 	mockRepo := &mockRepo{
 		getFundByIdFn: func(id string) (*model.Fund, error) {

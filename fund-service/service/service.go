@@ -1,18 +1,17 @@
 package service
 
 import (
-	"errors"
-	"fmt"
 	"log"
 
 	"github.com/google/uuid"
+	"github.com/oliknight1/retail-isa-investment/fund-service/internal"
 	"github.com/oliknight1/retail-isa-investment/fund-service/model"
 	"github.com/oliknight1/retail-isa-investment/fund-service/repository"
 )
 
 type FundService interface {
 	GetFundById(string) (*model.Fund, error)
-	GetFundList() (*[]model.Fund, error)
+	GetFundList(string) (*[]model.Fund, error)
 }
 
 type FundServiceImpl struct {
@@ -27,11 +26,11 @@ func New(repo repository.Repository) *FundServiceImpl {
 
 func (s *FundServiceImpl) GetFundById(id string) (*model.Fund, error) {
 	if id == "" {
-		return nil, errors.New("fund id is required")
+		return nil, internal.ErrMissingId
 	}
 	if err := uuid.Validate(id); err != nil {
 		log.Printf("invalid UUID provided: %s, error: %v", id, err)
-		return nil, err
+		return nil, internal.ErrInvalidId
 	}
 	return s.repo.GetFundById(id)
 }
@@ -51,7 +50,7 @@ func (s *FundServiceImpl) GetFundList(riskLevel string) ([]model.Fund, error) {
 	allowedRisk, ok := riskOrder[riskLevel]
 
 	if !ok {
-		return nil, fmt.Errorf("invalid risk level: %s", riskLevel)
+		return nil, internal.ErrInvalidRisklevel
 	}
 	appropiateFunds := []model.Fund{}
 

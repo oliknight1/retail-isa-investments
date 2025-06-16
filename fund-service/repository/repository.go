@@ -2,10 +2,10 @@ package repository
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 
+	"github.com/oliknight1/retail-isa-investment/fund-service/internal"
 	"github.com/oliknight1/retail-isa-investment/fund-service/model"
 )
 
@@ -45,7 +45,7 @@ func NewFundClient(path string) (*FundClient, error) {
 func (c *FundClient) GetFundById(id string) (*model.Fund, error) {
 	fund, ok := c.Funds[id]
 	if !ok {
-		return nil, fmt.Errorf("fund with id: %s not found", id)
+		return nil, internal.FundNotFoundError(id)
 	}
 	return &fund, nil
 }
