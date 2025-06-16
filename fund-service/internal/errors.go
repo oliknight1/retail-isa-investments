@@ -6,7 +6,6 @@ import (
 )
 
 var (
-	ErrInvalidId        = errors.New("invalid UUID provided")
 	ErrMissingId        = errors.New("id is required")
 	ErrInvalidRisklevel = errors.New("invalid risk level")
 	ErrInvalidUrl       = errors.New("invalid url")

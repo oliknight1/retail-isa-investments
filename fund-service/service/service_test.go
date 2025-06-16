@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/uuid"
 	"github.com/oliknight1/retail-isa-investment/fund-service/internal"
 	"github.com/oliknight1/retail-isa-investment/fund-service/model"
 	"github.com/oliknight1/retail-isa-investment/fund-service/service"
@@ -26,7 +25,7 @@ func (m *mockRepo) GetFundList() (*[]model.Fund, error) {
 
 func TestGetByIdSuccess(t *testing.T) {
 	expectedFund := model.Fund{
-		Id:          uuid.New().String(),
+		Id:          "fund-id",
 		Name:        "fund-name",
 		Description: "fund-description",
 		RiskLevel:   "risk-level",
@@ -56,29 +55,6 @@ func TestGetByIdSuccess(t *testing.T) {
 
 }
 
-func TestGetByIdInvalidId(t *testing.T) {
-	mockRepo := &mockRepo{
-		getFundByIdFn: func(id string) (*model.Fund, error) {
-			t.Fatal("repo.GetFundById should not be called for invalid UUID")
-			return nil, nil
-		},
-	}
-
-	svc := service.New(mockRepo)
-
-	_, err := svc.GetFundById("invalid-uuid")
-
-	if err == nil {
-		t.Error("expected error for invalid UUID")
-		return
-	}
-
-	//TODO: error msg incorrect
-	if err != internal.ErrInvalidId {
-		t.Errorf("expected %s error, got: %v", internal.ErrInvalidId, err)
-	}
-
-}
 func TestGetFundByIdEmptyID(t *testing.T) {
 	mockRepo := &mockRepo{
 		getFundByIdFn: func(id string) (*model.Fund, error) {
@@ -107,7 +83,7 @@ func TestGetFundByIdNotFound(t *testing.T) {
 	}
 	svc := service.New(mockRepo)
 
-	_, err := svc.GetFundById("123e4567-e89b-12d3-a456-426614174000") // valid UUID
+	_, err := svc.GetFundById("fund-doesn't-exist")
 
 	if err == nil {
 		t.Error("expected error for fund not found")
@@ -149,11 +125,11 @@ func TestGetListSuccess(t *testing.T) {
 		t.Errorf("unexpected error: %v", err)
 	}
 
-	if len(funds) == 0 {
-		t.Errorf("expected funds length of : %d, got %d", len(expectedFundList), len(funds))
+	if len(*funds) == 0 {
+		t.Errorf("expected funds length of : %d, got %d", len(expectedFundList), len(*funds))
 	}
 	//TODO: proper equivilance test
-	if len(funds) != len(expectedFundList) {
+	if len(*funds) != len(expectedFundList) {
 		t.Errorf("got %+v, want %+v", funds, expectedFundList)
 	}
 }
@@ -261,7 +237,7 @@ func TestGetFundListFiltersRiskLevel(t *testing.T) {
 				return
 			}
 
-			if diff := cmp.Diff(tt.expectedFundList, actual); diff != "" {
+			if diff := cmp.Diff(&tt.expectedFundList, actual); diff != "" {
 				t.Errorf("unexpected fund list (-want +got):\n%s", diff)
 			}
 		})

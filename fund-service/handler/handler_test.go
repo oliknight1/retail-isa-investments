@@ -2,6 +2,7 @@ package handler_test
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -87,29 +88,7 @@ func TestGetFundByIdMissingId(t *testing.T) {
 	}
 
 }
-func TestGetFundByIdInvalidId(t *testing.T) {
-	mockService := &mockService{
-		getFundById: func(id string) (*model.Fund, error) {
-			return &model.Fund{}, internal.ErrInvalidId
-		},
-	}
-	handler := &handler.FundHandler{Service: mockService}
 
-	req := httptest.NewRequest(http.MethodGet, "/funds/fund-123", nil)
-
-	recorder := httptest.NewRecorder()
-
-	handler.GetFundById(recorder, req)
-	if recorder.Code != http.StatusBadRequest {
-		t.Errorf("expected status 400, got %d", recorder.Code)
-	}
-
-	body := strings.TrimSpace(recorder.Body.String())
-	if body != string(internal.ErrInvalidId.Error()) {
-		t.Errorf("expected error message: %s got: %s", internal.ErrInvalidId, body)
-	}
-
-}
 func TestGetFundByIdINotFound(t *testing.T) {
 	mockService := &mockService{
 		getFundById: func(id string) (*model.Fund, error) {
@@ -132,5 +111,70 @@ func TestGetFundByIdINotFound(t *testing.T) {
 	body := strings.TrimSpace(recorder.Body.String())
 	if body != string(internal.FundNotFoundError(id).Error()) {
 		t.Errorf("expected body to contain '%s', got '%s'", internal.FundNotFoundError(id), body)
+	}
+}
+
+func TestGetFundListHandler(t *testing.T) {
+	tests := []struct {
+		name           string
+		queryParam     string
+		mockReturn     *[]model.Fund
+		mockError      error
+		expectedStatus int
+		expectedBody   string // optional basic body check
+	}{
+		{
+			name:           "returns funds successfully with valid riskLevel",
+			queryParam:     "?riskLevel=Medium",
+			mockReturn:     &[]model.Fund{{Id: "1", Name: "Fund 1", RiskLevel: "Medium"}},
+			expectedStatus: http.StatusOK,
+			expectedBody:   `"riskLevel":"Medium"`,
+		},
+		{
+			name:           "returns all funds when riskLevel is not provided",
+			queryParam:     "",
+			mockReturn:     &[]model.Fund{{Id: "1", Name: "Fund 1", RiskLevel: "Low"}},
+			expectedStatus: http.StatusOK,
+			expectedBody:   `"riskLevel":"Low"`,
+		},
+		{
+			name:           "returns 400 on invalid riskLevel",
+			queryParam:     "?riskLevel=invalid",
+			mockError:      internal.ErrInvalidRisklevel,
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   internal.ErrInvalidRisklevel.Error(),
+		},
+		{
+			name:           "returns 500 on unexpected error",
+			queryParam:     "?riskLevel=Medium",
+			mockError:      errors.New("something broke"),
+			expectedStatus: http.StatusInternalServerError,
+			expectedBody:   "internal server error",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockService := &mockService{
+				getFundList: func(riskLevel *string) (*[]model.Fund, error) {
+					return tt.mockReturn, tt.mockError
+				},
+			}
+
+			handler := handler.FundHandler{Service: mockService}
+			req := httptest.NewRequest(http.MethodGet, "/funds"+tt.queryParam, nil)
+			recorder := httptest.NewRecorder()
+
+			handler.GetFundList(recorder, req)
+
+			if recorder.Code != tt.expectedStatus {
+				t.Errorf("expected status %d, got %d", tt.expectedStatus, recorder.Code)
+			}
+
+			body := recorder.Body.String()
+			if tt.expectedBody != "" && !strings.Contains(body, tt.expectedBody) {
+				t.Errorf("expected body to contain %q, got %q", tt.expectedBody, body)
+			}
+		})
 	}
 }
