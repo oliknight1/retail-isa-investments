@@ -142,7 +142,8 @@ func TestGetListSuccess(t *testing.T) {
 
 	svc := service.New(mockRepo)
 
-	funds, err := svc.GetFundList("Low")
+	riskLevel := "Low"
+	funds, err := svc.GetFundList(&riskLevel)
 
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
@@ -157,16 +158,23 @@ func TestGetListSuccess(t *testing.T) {
 	}
 }
 func TestGetFundListFiltersRiskLevel(t *testing.T) {
+	// risk levels
+	var (
+		low     = "Low"
+		medium  = "Medium"
+		high    = "High"
+		invalid = "low"
+	)
 	tests := []struct {
 		name             string
-		riskLevel        string
+		riskLevel        *string
 		fundList         []model.Fund
 		expectedFundList []model.Fund
 		expectErr        bool
 	}{
 		{
 			name:      "filters out funds above Medium",
-			riskLevel: "Medium",
+			riskLevel: &medium,
 			fundList: []model.Fund{
 				{Id: "1", Name: "Fund 1", RiskLevel: "Low"},
 				{Id: "2", Name: "Fund 2", RiskLevel: "Low"},
@@ -182,7 +190,7 @@ func TestGetFundListFiltersRiskLevel(t *testing.T) {
 		},
 		{
 			name:      "includes all when riskLevel is High",
-			riskLevel: "High",
+			riskLevel: &high,
 			fundList: []model.Fund{
 				{Id: "1", Name: "Fund 1", RiskLevel: "Low"},
 				{Id: "2", Name: "Fund 2", RiskLevel: "Medium"},
@@ -197,7 +205,7 @@ func TestGetFundListFiltersRiskLevel(t *testing.T) {
 		},
 		{
 			name:      "filters out all when riskLevel is Low",
-			riskLevel: "Low",
+			riskLevel: &low,
 			fundList: []model.Fund{
 				{Id: "1", Name: "Fund 1", RiskLevel: "Medium"},
 				{Id: "2", Name: "Fund 2", RiskLevel: "High"},
@@ -207,13 +215,26 @@ func TestGetFundListFiltersRiskLevel(t *testing.T) {
 		},
 		{
 			name:      "invalid risk level: lowercase input",
-			riskLevel: "medium",
+			riskLevel: &invalid,
 			fundList: []model.Fund{
 				{Id: "1", Name: "Fund 1", RiskLevel: "Low"},
 				{Id: "2", Name: "Fund 2", RiskLevel: "Medium"},
 			},
 			expectedFundList: nil,
 			expectErr:        true,
+		},
+		{
+			name:      "empty risk level",
+			riskLevel: nil,
+			fundList: []model.Fund{
+				{Id: "1", Name: "Fund 1", RiskLevel: "Low"},
+				{Id: "2", Name: "Fund 2", RiskLevel: "Medium"},
+			},
+			expectedFundList: []model.Fund{
+				{Id: "1", Name: "Fund 1", RiskLevel: "Low"},
+				{Id: "2", Name: "Fund 2", RiskLevel: "Medium"},
+			},
+			expectErr: false,
 		},
 	}
 

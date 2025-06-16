@@ -11,7 +11,7 @@ import (
 
 type FundService interface {
 	GetFundById(string) (*model.Fund, error)
-	GetFundList(string) (*[]model.Fund, error)
+	GetFundList(*string) (*[]model.Fund, error)
 }
 
 type FundServiceImpl struct {
@@ -35,19 +35,23 @@ func (s *FundServiceImpl) GetFundById(id string) (*model.Fund, error) {
 	return s.repo.GetFundById(id)
 }
 
-func (s *FundServiceImpl) GetFundList(riskLevel string) ([]model.Fund, error) {
+func (s *FundServiceImpl) GetFundList(riskLevel *string) ([]model.Fund, error) {
+	allFunds, err := s.repo.GetFundList()
+	if err != nil {
+		return nil, err
+	}
+	if riskLevel == nil {
+		return *allFunds, nil
+	}
+
 	//NOTE: This should be fetched from another service in real-app
 	var riskOrder = map[string]int{
 		"Low":    1,
 		"Medium": 2,
 		"High":   3,
 	}
-	allFunds, err := s.repo.GetFundList()
-	if err != nil {
-		return nil, err
-	}
 
-	allowedRisk, ok := riskOrder[riskLevel]
+	allowedRisk, ok := riskOrder[*riskLevel]
 
 	if !ok {
 		return nil, internal.ErrInvalidRisklevel
