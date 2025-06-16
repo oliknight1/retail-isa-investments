@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/oliknight1/retail-isa-investment/customer-service/service"
@@ -31,6 +33,13 @@ func (h *CustomerHandler) CreateCustomer(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(customer); err != nil {
+		log.Printf("failed to encode JSON: %v", err)
+		http.Error(w, "failed to encode response", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(customer)
+	w.Write(buf.Bytes())
 }
