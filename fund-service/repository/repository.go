@@ -30,7 +30,7 @@ func NewFundClient(path string) (*FundClient, error) {
 
 	var fundList []model.Fund
 	if err := json.NewDecoder(file).Decode(&fundList); err != nil {
-		log.Printf("error deconding fund data: %v", err)
+		log.Printf("error decoding fund data: %v", err)
 		return nil, err
 	}
 
@@ -47,6 +47,6 @@ func (c *FundClient) GetFundById(id string) (*model.Fund, error) {
 	}
 	return foundFund, nil
 }
-func (c *FundClient) GetFundList(riskLevel *string) (*[]model.Fund, error) {
+func (c *FundClient) GetFundList() (*[]model.Fund, error) {
 	return &c.Funds, nil
 }
