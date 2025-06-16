@@ -47,4 +47,6 @@ func (c *FundClient) GetFundById(id string) (*model.Fund, error) {
 	}
 	return foundFund, nil
 }
+func (c *FundClient) GetFundList(riskLevel *string) (*[]model.Fund, error) {
+	return &c.Funds, nil
 }
