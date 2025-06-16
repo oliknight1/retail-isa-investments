@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -24,7 +23,8 @@ func main() {
 	ch := handler.New(svc)
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "OK")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"ok"}`))
 	})
 
 	http.HandleFunc("POST /customers", ch.CreateCustomer)
