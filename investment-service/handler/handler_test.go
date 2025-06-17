@@ -2,6 +2,7 @@ package handler_test
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -117,5 +118,147 @@ func TestCreateInvestmentFailures(t *testing.T) {
 				t.Fatalf("expected status %d, got %d", tc.expectedCode, res.StatusCode)
 			}
 		})
+	}
+}
+
+func TestGetInvestmentByIdSuccess(t *testing.T) {
+	mockSvc := &mockService{
+		getInvestmentById: func(id string) (*model.Investment, error) {
+			return &model.Investment{
+				Id:         id,
+				CustomerId: "cust-123",
+				FundId:     "fund-456",
+				Amount:     100.0,
+				Status:     "pending",
+				CreatedAt:  time.Now(),
+			}, nil
+		},
+	}
+	handler := handler.New(mockSvc)
+
+	req := httptest.NewRequest(http.MethodGet, "/investments/inv-123", nil)
+	w := httptest.NewRecorder()
+
+	handler.GetInvestmentById(w, req)
+	res := w.Result()
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200 OK, got %d", res.StatusCode)
+	}
+	var inv model.Investment
+	if err := json.NewDecoder(res.Body).Decode(&inv); err != nil {
+		t.Fatalf("decode error: %v", err)
+	}
+	if inv.Id != "inv-123" {
+		t.Errorf("expected id inv-123, got %s", inv.Id)
+	}
+}
+
+func TestGetInvestmentByIdMissingId(t *testing.T) {
+	mockSvc := &mockService{}
+	handler := handler.New(mockSvc)
+
+	req := httptest.NewRequest(http.MethodGet, "/investments/", nil)
+	w := httptest.NewRecorder()
+
+	handler.GetInvestmentById(w, req)
+
+	res := w.Result()
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusBadRequest {
+		t.Fatalf("expected 400 Bad Request, got %d", res.StatusCode)
+	}
+}
+
+func TestGetInvestmentByIdServiceError(t *testing.T) {
+	mockSvc := &mockService{
+		getInvestmentById: func(id string) (*model.Investment, error) {
+			return nil, errors.New("db failure")
+		},
+	}
+	handler := handler.New(mockSvc)
+
+	req := httptest.NewRequest(http.MethodGet, "/investments/inv-123", nil)
+	w := httptest.NewRecorder()
+
+	handler.GetInvestmentById(w, req)
+	res := w.Result()
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusInternalServerError {
+		t.Fatalf("expected 500 Internal Server Error, got %d", res.StatusCode)
+	}
+}
+func TestGetInvestmentsByCustomerIdSuccess(t *testing.T) {
+	mockSvc := &mockService{
+		getInvestmentsByCustomerId: func(id string) (*[]model.Investment, error) {
+			return &[]model.Investment{
+				{
+					Id:         "inv-1",
+					CustomerId: id,
+					FundId:     "fund-1",
+					Amount:     100.0,
+					Status:     "pending",
+					CreatedAt:  time.Now(),
+				},
+			}, nil
+		},
+	}
+	handler := handler.New(mockSvc)
+
+	req := httptest.NewRequest(http.MethodGet, "/customers/cust-123/investments", nil)
+	w := httptest.NewRecorder()
+
+	handler.GetInvestmentsByCustomerId(w, req)
+	res := w.Result()
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200 OK, got %d", res.StatusCode)
+	}
+	var invs []model.Investment
+	if err := json.NewDecoder(res.Body).Decode(&invs); err != nil {
+		t.Fatalf("decode error: %v", err)
+	}
+	if len(invs) != 1 || invs[0].CustomerId != "cust-123" {
+		t.Errorf("unexpected result: %+v", invs)
+	}
+}
+
+func TestGetInvestmentsByCustomerIdMissingId(t *testing.T) {
+	mockSvc := &mockService{}
+	handler := handler.New(mockSvc)
+
+	req := httptest.NewRequest(http.MethodGet, "/customers//investments", nil)
+	w := httptest.NewRecorder()
+
+	handler.GetInvestmentsByCustomerId(w, req)
+	res := w.Result()
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusBadRequest {
+		t.Fatalf("expected 400 Bad Request, got %d", res.StatusCode)
+	}
+}
+
+func TestGetInvestmentsByCustomerIdServiceError(t *testing.T) {
+	mockSvc := &mockService{
+		getInvestmentsByCustomerId: func(id string) (*[]model.Investment, error) {
+			return nil, errors.New("some db error")
+		},
+	}
+	handler := handler.New(mockSvc)
+
+	req := httptest.NewRequest(http.MethodGet, "/customers/cust-123/investments", nil)
+	w := httptest.NewRecorder()
+
+	handler.GetInvestmentsByCustomerId(w, req)
+	res := w.Result()
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusInternalServerError {
+		t.Fatalf("expected 500 Internal Server Error, got %d", res.StatusCode)
 	}
 }
