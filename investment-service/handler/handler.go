@@ -87,7 +87,7 @@ func (h *InvestmentHandler) GetInvestmentsByCustomerId(w http.ResponseWriter, r 
 		http.Error(w, internal.ErrMissingCustomerId.Error(), http.StatusBadRequest)
 		return
 	}
-	customerId := parts[2]
+	customerId := parts[3]
 
 	investments, err := h.Service.GetInvestmentsByCustomerId(customerId)
 	if err != nil {
