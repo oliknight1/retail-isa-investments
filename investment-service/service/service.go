@@ -1,6 +1,7 @@
 package service
 
 import (
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -51,6 +52,14 @@ func (s *InvestmentServiceImpl) CreateInvestment(customerId string, fundId strin
 	}
 
 	s.publisher.Publish("investment.created", investment)
+
+	if err := s.publisher.Publish("investment.processed", investment); err != nil {
+		log.Println("error publishing investment.processed event: %v", err)
+	}
+
+	if err := s.publisher.Publish("investment.validation.pending", investment); err != nil {
+		log.Println("error publishing investment.validation.pending event: %v", err)
+	}
 
 	return &investment, nil
 }
