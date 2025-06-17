@@ -1,7 +1,9 @@
 package service_test
 
 import (
+	"errors"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/oliknight1/retail-isa-investment/investment-service/internal"
@@ -151,5 +153,63 @@ func TestCreateInvestmentFailures(t *testing.T) {
 				t.Errorf("expected nil investment, got: %+v", investment)
 			}
 		})
+	}
+}
+
+func TestGetInvestmentById_Success(t *testing.T) {
+	expected := &model.Investment{
+		Id:         "inv-1",
+		CustomerId: "cust-1",
+		FundId:     "fund-1",
+		Amount:     200.0,
+		Status:     "completed",
+		CreatedAt:  time.Now(),
+	}
+
+	mockRepo := &mockRepo{
+		getInvestmentById: func(id string) (*model.Investment, error) {
+			return expected, nil
+		},
+	}
+	svc := service.New(mockRepo, nil)
+
+	actual, err := svc.GetInvestmentById("inv-1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if diff := cmp.Diff(expected, actual, cmp.AllowUnexported(model.Investment{})); diff != "" {
+		t.Errorf("unexpected result (-want +got):\n%s", diff)
+	}
+}
+
+func TestGetInvestmentByIdEmptyId(t *testing.T) {
+	mockRepo := &mockRepo{}
+	svc := service.New(mockRepo, nil)
+
+	_, err := svc.GetInvestmentById("")
+	if err == nil {
+		t.Fatalf("expected error, got nil")
+	}
+
+	if err != internal.ErrMissingFundId {
+		t.Errorf("expected error %v, got %v", internal.ErrMissingFundId, err)
+	}
+}
+
+func TestGetInvestmentByIdRepoFails(t *testing.T) {
+	mockRepo := &mockRepo{
+		getInvestmentById: func(id string) (*model.Investment, error) {
+			return nil, errors.New("not found")
+		},
+	}
+	svc := service.New(mockRepo, nil)
+
+	_, err := svc.GetInvestmentById("missing-id")
+	if err == nil {
+		t.Fatalf("expected error, got nil")
+	}
+
+	if err.Error() != "not found" {
+		t.Errorf("expected error 'not found', got %v", err)
 	}
 }
