@@ -47,7 +47,7 @@ func (s *InvestmentServiceImpl) CreateInvestment(customerId string, fundId strin
 		Status:     "pending",
 		CreatedAt:  time.Now(),
 	}
-	if err := s.repo.CreateInvestment(&investment); err != nil {
+	if err := s.repo.CreateInvestment(investment); err != nil {
 		return nil, err
 	}
 
