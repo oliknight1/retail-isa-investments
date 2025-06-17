@@ -34,7 +34,7 @@ func (c *InvestmentClient) CreateInvestment(investment model.Investment) error {
 func (c *InvestmentClient) GetInvestmentById(id string) (*model.Investment, error) {
 	investment, ok := c.Investments[id]
 	if !ok {
-		return nil, fmt.Errorf("investmentwith ID %s not found", id)
+		return nil, fmt.Errorf("investment with id %s not found", id)
 	}
 	return &investment, nil
 

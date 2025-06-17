@@ -156,7 +156,7 @@ func TestCreateInvestmentFailures(t *testing.T) {
 	}
 }
 
-func TestGetInvestmentById_Success(t *testing.T) {
+func TestGetInvestmentByIdSuccess(t *testing.T) {
 	expected := &model.Investment{
 		Id:         "inv-1",
 		CustomerId: "cust-1",
@@ -213,3 +213,5 @@ func TestGetInvestmentByIdRepoFails(t *testing.T) {
 		t.Errorf("expected error 'not found', got %v", err)
 	}
 }
+
+func TestGetInvestmentByCustomerIdSuccess(t *testing.T) {}
