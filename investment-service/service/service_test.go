@@ -3,6 +3,8 @@ package service_test
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/oliknight1/retail-isa-investment/investment-service/internal"
 	"github.com/oliknight1/retail-isa-investment/investment-service/model"
 	"github.com/oliknight1/retail-isa-investment/investment-service/service"
 )
@@ -35,56 +37,88 @@ func (m *mockPublisher) Publish(subject string, payload any) error {
 func (m *mockPublisher) Close() {
 	m.close()
 }
-func TestCreateInvestment(t *testing.T) {
+
+func TestCreateInvestmentSuccess(t *testing.T) {
+	mockRepo := &mockRepo{
+		createInvestment: func(inv model.Investment) error {
+			return nil
+		},
+	}
+	mockPub := &mockPublisher{
+		publishFn: func(subject string, payload any) error {
+			return nil
+		},
+		close: func() {},
+	}
+
+	svc := service.New(mockRepo, mockPub)
+
+	customerId := "cust-1"
+	fundId := "fund-1"
+	amount := 100.0
+
+	investment, err := svc.CreateInvestment(customerId, fundId, amount)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if investment == nil {
+		t.Fatal("expected investment, got nil")
+	}
+
+	expected := &model.Investment{
+		Id:         investment.Id,
+		CustomerId: customerId,
+		FundId:     fundId,
+		Amount:     amount,
+		Status:     "pending",
+		CreatedAt:  investment.CreatedAt,
+	}
+
+	if diff := cmp.Diff(expected, investment,
+		cmp.AllowUnexported(model.Investment{}),
+		cmp.FilterPath(func(p cmp.Path) bool {
+			return p.String() == "CompletedAt" || p.String() == "FailureReason"
+		}, cmp.Ignore()),
+	); diff != "" {
+		t.Errorf("unexpected investment (-want +got):\n%s", diff)
+	}
+}
+
+func TestCreateInvestmentFailures(t *testing.T) {
 	tests := []struct {
-		name       string
-		customerId string
-		fundId     string
-		amount     float64
-		expectErr  bool
-		repoFn     func(model.Investment) error
-		publishFn  func(string, any) error
+		name        string
+		customerId  string
+		fundId      string
+		amount      float64
+		expectedErr string
 	}{
 		{
-			name:       "success",
-			customerId: "cust-1",
-			fundId:     "fund-1",
-			amount:     100,
-			expectErr:  false,
-			repoFn: func(inv model.Investment) error {
-				return nil
-			},
-			publishFn: func(subject string, payload any) error {
-				return nil
-			},
+			name:        "missing customerId",
+			customerId:  "",
+			fundId:      "fund-1",
+			amount:      100,
+			expectedErr: internal.ErrMissingCustomerId.Error(),
 		},
 		{
-			name:       "error - empty customerId",
-			customerId: "",
-			fundId:     "fund-1",
-			amount:     100,
-			expectErr:  true,
+			name:        "missing fundId",
+			customerId:  "cust-1",
+			fundId:      "",
+			amount:      100,
+			expectedErr: internal.ErrMissingFundId.Error(),
 		},
 		{
-			name:       "error - empty fundId",
-			customerId: "cust-1",
-			fundId:     "",
-			amount:     100,
-			expectErr:  true,
+			name:        "amount is zero",
+			customerId:  "cust-1",
+			fundId:      "fund-1",
+			amount:      0,
+			expectedErr: internal.ErrZeroTransactionAmount.Error(),
 		},
 		{
-			name:       "error - zero amount",
-			customerId: "cust-1",
-			fundId:     "fund-1",
-			amount:     0,
-			expectErr:  true,
-		},
-		{
-			name:       "error - negative amount",
-			customerId: "cust-1",
-			fundId:     "fund-1",
-			amount:     -50,
-			expectErr:  true,
+			name:        "amount is negative",
+			customerId:  "cust-1",
+			fundId:      "fund-1",
+			amount:      -50,
+			expectedErr: internal.ErrZeroTransactionAmount.Error(),
 		},
 	}
 
@@ -92,45 +126,29 @@ func TestCreateInvestment(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo := &mockRepo{
 				createInvestment: func(inv model.Investment) error {
-					if tt.repoFn != nil {
-						return tt.repoFn(inv)
-					}
+					t.Fatal("should not call CreateInvestment on validation failure")
 					return nil
 				},
 			}
 			mockPub := &mockPublisher{
 				publishFn: func(subject string, payload any) error {
-					if tt.publishFn != nil {
-						return tt.publishFn(subject, payload)
-					}
+					t.Fatal("should not publish on validation failure")
 					return nil
 				},
 				close: func() {},
 			}
 
 			svc := service.New(mockRepo, mockPub)
-			inv, err := svc.CreateInvestment(tt.customerId, tt.fundId, tt.amount)
+			investment, err := svc.CreateInvestment(tt.customerId, tt.fundId, tt.amount)
 
-			if tt.expectErr {
-				if err == nil {
-					t.Errorf("expected error but got nil")
-				}
-				if inv != nil {
-					t.Errorf("expected nil investment, got: %+v", inv)
-				}
-				return
+			if err == nil {
+				t.Fatalf("expected error '%s', got nil", tt.expectedErr)
 			}
-
-			if err != nil {
-				t.Errorf("unexpected error: %v", err)
-				return
+			if err.Error() != tt.expectedErr {
+				t.Errorf("expected error: '%s', got: '%s'", tt.expectedErr, err.Error())
 			}
-			if inv == nil {
-				t.Errorf("expected investment, got nil")
-				return
-			}
-			if inv.CustomerId != tt.customerId || inv.FundId != tt.fundId || inv.Amount != tt.amount {
-				t.Errorf("unexpected investment data: %+v", inv)
+			if investment != nil {
+				t.Errorf("expected nil investment, got: %+v", investment)
 			}
 		})
 	}
