@@ -214,4 +214,66 @@ func TestGetInvestmentByIdRepoFails(t *testing.T) {
 	}
 }
 
-func TestGetInvestmentByCustomerIdSuccess(t *testing.T) {}
+func TestGetInvestmentByCustomerIdSuccess(t *testing.T) {
+	expected := &[]model.Investment{
+		{
+			Id:         "inv-1",
+			CustomerId: "cust-1",
+			FundId:     "fund-1",
+			Amount:     200.0,
+			Status:     "completed",
+			CreatedAt:  time.Now(),
+		},
+		{
+			Id:         "inv-2",
+			CustomerId: "cust-1",
+			FundId:     "fund-2",
+			Amount:     100.0,
+			Status:     "completed",
+			CreatedAt:  time.Now(),
+		},
+		{
+			Id:         "inv-3",
+			CustomerId: "cust-2",
+			FundId:     "fund-3",
+			Amount:     300.0,
+			Status:     "completed",
+			CreatedAt:  time.Now(),
+		},
+	}
+
+	mockRepo := &mockRepo{
+		getInvestmentsByCustomerId: func(id string) (*[]model.Investment, error) {
+			return expected, nil
+		},
+	}
+	svc := service.New(mockRepo, nil)
+	actual, err := svc.GetInvestmentsByCustomerId("cust-1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(*actual) != len(*expected) {
+		t.Fatalf("expect length of: %d, recieved: %d", len(*expected), len(*actual))
+	}
+	if diff := cmp.Diff(expected, actual, cmp.AllowUnexported(model.Investment{})); diff != "" {
+		t.Errorf("unexpected result (-want +got):\n%s", diff)
+	}
+}
+func TestGetInvestmentByCustomerIdEmptyId(t *testing.T) {
+	mockRepo := &mockRepo{
+		getInvestmentsByCustomerId: func(id string) (*[]model.Investment, error) {
+			return &[]model.Investment{}, nil
+		},
+	}
+	svc := service.New(mockRepo, nil)
+	actual, err := svc.GetInvestmentsByCustomerId("")
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if !errors.Is(err, internal.ErrMissingCustomerId) {
+		t.Fatalf("expect error message: %s\n recieved: %s", internal.ErrMissingCustomerId, err)
+	}
+	if actual != nil {
+		t.Fatal("expected result to be nil when error is returned")
+	}
+}
