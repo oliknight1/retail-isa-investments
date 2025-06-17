@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/oliknight1/retail-isa-investment/investment-service/internal"
 	"github.com/oliknight1/retail-isa-investment/investment-service/service"
@@ -60,4 +61,40 @@ func (h *InvestmentHandler) CreateInvestment(w http.ResponseWriter, r *http.Requ
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(buf.Bytes())
+}
+
+func (h *InvestmentHandler) GetInvestmentById(w http.ResponseWriter, r *http.Request) {
+	parts := strings.Split(r.URL.Path, "/")
+	if len(parts) < 3 || parts[2] == "" {
+		http.Error(w, internal.ErrMissingFundId.Error(), http.StatusBadRequest)
+		return
+	}
+	id := parts[2]
+
+	investment, err := h.Service.GetInvestmentById(id)
+	if err != nil {
+		http.Error(w, "failed to get investment", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(investment)
+}
+
+func (h *InvestmentHandler) GetInvestmentsByCustomerId(w http.ResponseWriter, r *http.Request) {
+	parts := strings.Split(r.URL.Path, "/")
+	if len(parts) < 3 || parts[2] == "" {
+		http.Error(w, internal.ErrMissingCustomerId.Error(), http.StatusBadRequest)
+		return
+	}
+	customerId := parts[2]
+
+	investments, err := h.Service.GetInvestmentsByCustomerId(customerId)
+	if err != nil {
+		http.Error(w, "failed to get investments", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(investments)
 }
