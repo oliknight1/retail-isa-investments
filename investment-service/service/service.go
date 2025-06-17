@@ -13,7 +13,7 @@ import (
 type InvestmentService interface {
 	CreateInvestment(customerId string, fundId string, amount float64) (*model.Investment, error)
 	GetInvestmentById(string) (*model.Investment, error)
-	// GetInvestmentsByCustomerId(string) (*[]model.Investment, error)
+	GetInvestmentsByCustomerId(string) (*[]model.Investment, error)
 }
 
 type InvestmentServiceImpl struct {
@@ -60,4 +60,10 @@ func (s *InvestmentServiceImpl) GetInvestmentById(id string) (*model.Investment,
 		return nil, internal.ErrMissingFundId
 	}
 	return s.repo.GetInvestmentById(id)
+}
+func (s *InvestmentServiceImpl) GetInvestmentsByCustomerId(id string) (*[]model.Investment, error) {
+	if id == "" {
+		return nil, internal.ErrMissingCustomerId
+	}
+	return s.repo.GetInvestmentsByCustomerId(id)
 }
