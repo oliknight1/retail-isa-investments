@@ -47,7 +47,7 @@ func TestCreateInvestment(t *testing.T) {
 		},
 	}
 
-	handler := handler.New(mockService)
+	handler := handler.New(mockService, nil)
 
 	reqBody := fmt.Sprintf(`{"customerId":"%s","fundId":"%s","amount":%f}`, customerId, fundId, amount)
 	req := httptest.NewRequest(http.MethodPost, "/investments", strings.NewReader(reqBody))
@@ -103,7 +103,7 @@ func TestCreateInvestmentFailures(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			h := handler.New(&mockService{})
+			h := handler.New(&mockService{}, nil)
 
 			req := httptest.NewRequest(http.MethodPost, "/investments", strings.NewReader(tc.body))
 			req.Header.Set("Content-Type", "application/json")
@@ -134,7 +134,7 @@ func TestGetInvestmentByIdSuccess(t *testing.T) {
 			}, nil
 		},
 	}
-	handler := handler.New(mockSvc)
+	handler := handler.New(mockSvc, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/investments/inv-123", nil)
 	w := httptest.NewRecorder()
@@ -157,7 +157,7 @@ func TestGetInvestmentByIdSuccess(t *testing.T) {
 
 func TestGetInvestmentByIdMissingId(t *testing.T) {
 	mockSvc := &mockService{}
-	handler := handler.New(mockSvc)
+	handler := handler.New(mockSvc, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/investments/", nil)
 	w := httptest.NewRecorder()
@@ -178,7 +178,7 @@ func TestGetInvestmentByIdServiceError(t *testing.T) {
 			return nil, errors.New("db failure")
 		},
 	}
-	handler := handler.New(mockSvc)
+	handler := handler.New(mockSvc, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/investments/inv-123", nil)
 	w := httptest.NewRecorder()
@@ -206,7 +206,7 @@ func TestGetInvestmentsByCustomerIdSuccess(t *testing.T) {
 			}, nil
 		},
 	}
-	handler := handler.New(mockSvc)
+	handler := handler.New(mockSvc, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/customers/cust-123/investments", nil)
 	w := httptest.NewRecorder()
@@ -229,7 +229,7 @@ func TestGetInvestmentsByCustomerIdSuccess(t *testing.T) {
 
 func TestGetInvestmentsByCustomerIdMissingId(t *testing.T) {
 	mockSvc := &mockService{}
-	handler := handler.New(mockSvc)
+	handler := handler.New(mockSvc, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/customers//investments", nil)
 	w := httptest.NewRecorder()
@@ -249,7 +249,7 @@ func TestGetInvestmentsByCustomerIdServiceError(t *testing.T) {
 			return nil, errors.New("some db error")
 		},
 	}
-	handler := handler.New(mockSvc)
+	handler := handler.New(mockSvc, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/customers/cust-123/investments", nil)
 	w := httptest.NewRecorder()

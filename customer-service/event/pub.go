@@ -26,5 +26,11 @@ func NewNatsPublisher(url string) *NatsPublisher {
 
 func (p *NatsPublisher) PublishCustomer(customer model.Customer) error {
 	msg, _ := json.Marshal(customer)
-	return p.nc.Publish("customer.created", msg)
+	err := p.nc.Publish("customer.created", msg)
+
+	if err != nil {
+		log.Printf("failed to publish customer.created event: %v", err)
+	}
+
+	return err
 }

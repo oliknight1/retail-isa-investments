@@ -2,8 +2,10 @@ package service
 
 import (
 	"github.com/oliknight1/retail-isa-investment/fund-service/internal"
+	"github.com/oliknight1/retail-isa-investment/fund-service/logger"
 	"github.com/oliknight1/retail-isa-investment/fund-service/model"
 	"github.com/oliknight1/retail-isa-investment/fund-service/repository"
+	"go.uber.org/zap"
 )
 
 type FundService interface {
@@ -12,17 +14,20 @@ type FundService interface {
 }
 
 type FundServiceImpl struct {
-	repo repository.Repository
+	repo   repository.Repository
+	Logger logger.Logger
 }
 
-func New(repo repository.Repository) *FundServiceImpl {
+func New(repo repository.Repository, logger logger.Logger) *FundServiceImpl {
 	return &FundServiceImpl{
 		repo,
+		logger,
 	}
 }
 
 func (s *FundServiceImpl) GetFundById(id string) (*model.Fund, error) {
 	if id == "" {
+		s.Logger.Error("missing fund_id when fetching fund", zap.Error(internal.ErrMissingId))
 		return nil, internal.ErrMissingId
 	}
 	return s.repo.GetFundById(id)
@@ -31,6 +36,7 @@ func (s *FundServiceImpl) GetFundById(id string) (*model.Fund, error) {
 func (s *FundServiceImpl) GetFundList(riskLevel *string) (*[]model.Fund, error) {
 	allFunds, err := s.repo.GetFundList()
 	if err != nil {
+		s.Logger.Error("error fetching fund list", zap.Error(err))
 		return nil, err
 	}
 	if riskLevel == nil {
@@ -47,6 +53,7 @@ func (s *FundServiceImpl) GetFundList(riskLevel *string) (*[]model.Fund, error) 
 	allowedRisk, ok := riskOrder[*riskLevel]
 
 	if !ok {
+		s.Logger.Error("invalid riskLevel provided", riskLevel)
 		return nil, internal.ErrInvalidRisklevel
 	}
 	appropiateFunds := []model.Fund{}

@@ -8,7 +8,7 @@ import (
 )
 
 type Repository interface {
-	CreateInvestment(investment *model.Investment) error
+	CreateInvestment(investment model.Investment) error
 	GetInvestmentById(id string) (*model.Investment, error)
 	GetInvestmentsByCustomerId(id string) (*[]model.Investment, error)
 }

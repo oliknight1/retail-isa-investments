@@ -1,0 +1,51 @@
+version: "3.8"
+
+services:
+  customer-service:
+    build:
+      context: ./customer-service
+    container_name: customer-service
+    ports:
+      - "8081:8080"
+    depends_on:
+      - nats
+    environment:
+      - NATS_URL=nats://nats:4222
+
+  fund-service:
+    build:
+      context: ./fund-service
+    container_name: fund-service
+    ports:
+      - "8082:8080"
+    depends_on:
+      - nats
+    environment:
+      - NATS_URL=nats://nats:4222
+      - FUNDS_JSON_PATH=./repository/funds.json
+
+  investment-service:
+    build:
+      context: ./investment-service
+    container_name: investment-service
+    ports:
+      - "8083:8080"
+    depends_on:
+      - nats
+    environment:
+      - NATS_URL=nats://nats:4222
+
+  nats:
+    image: nats:2.10
+    container_name: nats
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml

@@ -35,6 +35,7 @@ func (db *InMemDb) Create(customer model.Customer) error {
 		return fmt.Errorf("invalid customer ID: %w", err)
 	}
 
+	db.Store[customer.Id] = customer
 	return nil
 }
 

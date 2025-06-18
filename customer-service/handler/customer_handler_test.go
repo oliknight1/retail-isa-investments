@@ -15,10 +15,15 @@ import (
 
 type mockService struct {
 	registerFn func(name string) (model.Customer, error)
+	getById    func(id string) (*model.Customer, error)
 }
 
 func (s *mockService) RegisterCustomer(name string) (model.Customer, error) {
 	return s.registerFn(name)
+}
+
+func (s *mockService) GetCustomerById(id string) (*model.Customer, error) {
+	return s.getById(id)
 }
 
 func TestCreateCustomerSuccess(t *testing.T) {
@@ -31,10 +36,10 @@ func TestCreateCustomerSuccess(t *testing.T) {
 			return model.Customer{Id: "1234", Name: name}, nil
 		},
 	}
-	handler := &handler.CustomerHandler{Service: mockService}
+	handler := &handler.CustomerHandler{Service: mockService, Logger: nil}
 
 	reqBody := fmt.Sprintf(`{"name":"%s"}`, expectedName)
-	req := httptest.NewRequest(http.MethodPost, "/customers", strings.NewReader(reqBody))
+	req := httptest.NewRequest(http.MethodPost, "/customer", strings.NewReader(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 
 	recorder := httptest.NewRecorder()
@@ -64,7 +69,7 @@ func TestInvalidJSON(t *testing.T) {
 	handler := &handler.CustomerHandler{Service: mockService}
 
 	reqBody := `{"name":"Oli"`
-	req := httptest.NewRequest(http.MethodPost, "/customers", strings.NewReader(reqBody))
+	req := httptest.NewRequest(http.MethodPost, "/customer", strings.NewReader(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 
 	recorder := httptest.NewRecorder()
@@ -90,7 +95,7 @@ func TestInavlidPayload(t *testing.T) {
 	handler := &handler.CustomerHandler{Service: mockService}
 
 	reqBody := `{"name":""}`
-	req := httptest.NewRequest(http.MethodPost, "/customers", strings.NewReader(reqBody))
+	req := httptest.NewRequest(http.MethodPost, "/customer", strings.NewReader(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 
 	recorder := httptest.NewRecorder()
@@ -112,7 +117,7 @@ func TestInavlidService(t *testing.T) {
 	handler := &handler.CustomerHandler{Service: mockService}
 
 	reqBody := `{"name":"Oli"}`
-	req := httptest.NewRequest(http.MethodPost, "/customers", strings.NewReader(reqBody))
+	req := httptest.NewRequest(http.MethodPost, "/customer", strings.NewReader(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 
 	recorder := httptest.NewRecorder()

@@ -1,6 +1,8 @@
 package service
 
 import (
+	"errors"
+
 	"github.com/google/uuid"
 	"github.com/oliknight1/retail-isa-investment/customer-service/event"
 	"github.com/oliknight1/retail-isa-investment/customer-service/model"
@@ -9,6 +11,7 @@ import (
 
 type CustomerService interface {
 	RegisterCustomer(name string) (model.Customer, error)
+	GetCustomerById(id string) (*model.Customer, error)
 }
 
 type customerServiceImpl struct {
@@ -38,4 +41,10 @@ func (cs *customerServiceImpl) RegisterCustomer(name string) (model.Customer, er
 	}
 
 	return customer, nil
+}
+func (cs *customerServiceImpl) GetCustomerById(id string) (*model.Customer, error) {
+	if id == "" {
+		return nil, errors.New("customer id must not be empty")
+	}
+	return cs.repo.GetById(id)
 }

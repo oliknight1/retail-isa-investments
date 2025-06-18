@@ -38,7 +38,7 @@ func TestGetByIdSuccess(t *testing.T) {
 			return &expectedFund, nil
 		},
 	}
-	svc := service.New(mockRepo)
+	svc := service.New(mockRepo, nil)
 
 	fund, err := svc.GetFundById(expectedFund.Id)
 
@@ -62,7 +62,7 @@ func TestGetFundByIdEmptyID(t *testing.T) {
 			return nil, nil
 		},
 	}
-	svc := service.New(mockRepo)
+	svc := service.New(mockRepo, nil)
 
 	_, err := svc.GetFundById("")
 
@@ -81,7 +81,7 @@ func TestGetFundByIdNotFound(t *testing.T) {
 			return nil, fmt.Errorf("fund with id: %s not found", id)
 		},
 	}
-	svc := service.New(mockRepo)
+	svc := service.New(mockRepo, nil)
 
 	_, err := svc.GetFundById("fund-doesn't-exist")
 
@@ -116,7 +116,7 @@ func TestGetListSuccess(t *testing.T) {
 		},
 	}
 
-	svc := service.New(mockRepo)
+	svc := service.New(mockRepo, nil)
 
 	riskLevel := "Low"
 	funds, err := svc.GetFundList(&riskLevel)
@@ -222,7 +222,7 @@ func TestGetFundListFiltersRiskLevel(t *testing.T) {
 				},
 			}
 
-			svc := service.New(mock)
+			svc := service.New(mock, nil)
 
 			actual, err := svc.GetFundList(tt.riskLevel)
 

@@ -9,11 +9,27 @@ import (
 
 	"github.com/oliknight1/retail-isa-investment/investment-service/event"
 	"github.com/oliknight1/retail-isa-investment/investment-service/handler"
+	"github.com/oliknight1/retail-isa-investment/investment-service/internal"
+	"github.com/oliknight1/retail-isa-investment/investment-service/logger"
 	"github.com/oliknight1/retail-isa-investment/investment-service/repository"
 	"github.com/oliknight1/retail-isa-investment/investment-service/service"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func main() {
+	logger, err := logger.NewLogger()
+	if err != nil {
+		log.Fatalf("failed to init logger: %v", err)
+	}
+	defer logger.Sync()
+
+	prometheus.MustRegister(
+		internal.InvestmentRequests,
+		internal.InvestmentCreated,
+		internal.InvestmentCreationFailures,
+		internal.InvestmentValidationEvents,
+	)
+
 	repo := repository.NewInvestmentClient()
 	natsURL := os.Getenv("NATS_URL")
 	if natsURL == "" {
@@ -24,8 +40,8 @@ func main() {
 	if err != nil {
 		log.Printf("error connecting to publisher: %v", err)
 	}
-	svc := service.New(repo, publisher)
-	ih := handler.New(svc)
+	svc := service.New(repo, publisher, logger)
+	ih := handler.New(svc, logger)
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

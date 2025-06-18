@@ -16,7 +16,7 @@ func (m *mockRepo) Create(customer model.Customer) error {
 	return m.createFn(customer)
 }
 
-func (m *mockRepo) GetById(string) (*model.Customer, error) {
+func (m *mockRepo) GetById(id string) (*model.Customer, error) {
 	return nil, nil
 }
 

@@ -1,0 +1,15 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: "customer-service"
+    static_configs:
+      - targets: ["customer-service:8080"]
+
+  - job_name: "fund-service"
+    static_configs:
+      - targets: ["fund-service:8080"]
+
+  - job_name: "investment-service"
+    static_configs:
+      - targets: ["investment-service:8080"]
