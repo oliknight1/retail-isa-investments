@@ -139,3 +139,7 @@ Each service exposes useful custom metrics:
 `investment_created_total`
 
 `investment_creation_failures_total (label: error_type)`
+
+## GitHub Project
+
+You can view the next steps for this project in the [GitHub Project Board](https://github.com/users/oliknight1/projects/1/views/1?query=sort%3Aupdated-desc+is%3Aopen)
