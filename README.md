@@ -52,7 +52,7 @@ Logs are configurable by environment variable (LOG_FORMAT=json|console).
 
 - Docker
 - Go 1.23
-- [NATSClI](https://github.com/nats-io/natscli)
+- [NATS CLI](https://github.com/nats-io/natscli)
 
 From the root of the project run:
 
