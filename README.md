@@ -57,7 +57,7 @@ Logs are configurable by environment variable (LOG_FORMAT=json|console).
 From the root of the project run:
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 This will start:
