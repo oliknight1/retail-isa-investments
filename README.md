@@ -113,6 +113,16 @@ curl localhost:8080/investments/customer/<customerId>
 
 ```
 
+### NATS CLI usage
+
+Using the NATS CLI makes it easy to subscribe to any events.
+
+For example, to subscribe to `customer.created`, run:
+
+```bash
+nats sub customer.created
+```
+
 ## Monitoring
 
 This uses Prometheus to scrape metrics from all the services, you can view the dashboard locally at
