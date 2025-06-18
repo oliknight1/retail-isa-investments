@@ -23,7 +23,9 @@ func New() *InMemDb {
 	}
 }
 
+// TODO: add mutex to write lock
 func (db *InMemDb) Create(customer model.Customer) error {
+	//TODO: move this validation to the service layer
 	if customer.Id == "" {
 		return fmt.Errorf("customer ID cannot be empty")
 	}
@@ -39,6 +41,7 @@ func (db *InMemDb) Create(customer model.Customer) error {
 	return nil
 }
 
+// TODO: move this validation to the service layer
 func (db *InMemDb) GetById(id string) (*model.Customer, error) {
 	if err := uuid.Validate(id); err != nil {
 		log.Printf("invalid UUID provided: %s, error: %v", id, err)

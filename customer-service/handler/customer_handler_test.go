@@ -11,6 +11,7 @@ import (
 
 	"github.com/oliknight1/retail-isa-investment/customer-service/handler"
 	"github.com/oliknight1/retail-isa-investment/customer-service/model"
+	"go.uber.org/zap"
 )
 
 type mockService struct {
@@ -36,7 +37,7 @@ func TestCreateCustomerSuccess(t *testing.T) {
 			return model.Customer{Id: "1234", Name: name}, nil
 		},
 	}
-	handler := &handler.CustomerHandler{Service: mockService, Logger: nil}
+	handler := &handler.CustomerHandler{Service: mockService, Logger: zap.NewNop()}
 
 	reqBody := fmt.Sprintf(`{"name":"%s"}`, expectedName)
 	req := httptest.NewRequest(http.MethodPost, "/customer", strings.NewReader(reqBody))
@@ -66,7 +67,7 @@ func TestInvalidJSON(t *testing.T) {
 			return model.Customer{Id: "1234", Name: name}, nil
 		},
 	}
-	handler := &handler.CustomerHandler{Service: mockService}
+	handler := &handler.CustomerHandler{Service: mockService, Logger: zap.NewNop()}
 
 	reqBody := `{"name":"Oli"`
 	req := httptest.NewRequest(http.MethodPost, "/customer", strings.NewReader(reqBody))
@@ -92,7 +93,7 @@ func TestInavlidPayload(t *testing.T) {
 			return model.Customer{Id: "1234", Name: name}, nil
 		},
 	}
-	handler := &handler.CustomerHandler{Service: mockService}
+	handler := &handler.CustomerHandler{Service: mockService, Logger: zap.NewNop()}
 
 	reqBody := `{"name":""}`
 	req := httptest.NewRequest(http.MethodPost, "/customer", strings.NewReader(reqBody))
@@ -114,7 +115,7 @@ func TestInavlidService(t *testing.T) {
 			return model.Customer{}, errors.New("service error")
 		},
 	}
-	handler := &handler.CustomerHandler{Service: mockService}
+	handler := &handler.CustomerHandler{Service: mockService, Logger: zap.NewNop()}
 
 	reqBody := `{"name":"Oli"}`
 	req := httptest.NewRequest(http.MethodPost, "/customer", strings.NewReader(reqBody))

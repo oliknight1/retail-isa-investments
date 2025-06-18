@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/oliknight1/retail-isa-investment/fund-service/internal"
+	"github.com/oliknight1/retail-isa-investment/fund-service/logger"
 	"github.com/oliknight1/retail-isa-investment/fund-service/model"
 	"github.com/oliknight1/retail-isa-investment/fund-service/service"
 )
@@ -38,7 +39,8 @@ func TestGetByIdSuccess(t *testing.T) {
 			return &expectedFund, nil
 		},
 	}
-	svc := service.New(mockRepo, nil)
+	logger := logger.NewMockLogger()
+	svc := service.New(mockRepo, logger)
 
 	fund, err := svc.GetFundById(expectedFund.Id)
 
@@ -62,7 +64,8 @@ func TestGetFundByIdEmptyID(t *testing.T) {
 			return nil, nil
 		},
 	}
-	svc := service.New(mockRepo, nil)
+	logger := logger.NewMockLogger()
+	svc := service.New(mockRepo, logger)
 
 	_, err := svc.GetFundById("")
 
@@ -81,7 +84,8 @@ func TestGetFundByIdNotFound(t *testing.T) {
 			return nil, fmt.Errorf("fund with id: %s not found", id)
 		},
 	}
-	svc := service.New(mockRepo, nil)
+	logger := logger.NewMockLogger()
+	svc := service.New(mockRepo, logger)
 
 	_, err := svc.GetFundById("fund-doesn't-exist")
 
@@ -116,7 +120,8 @@ func TestGetListSuccess(t *testing.T) {
 		},
 	}
 
-	svc := service.New(mockRepo, nil)
+	logger := logger.NewMockLogger()
+	svc := service.New(mockRepo, logger)
 
 	riskLevel := "Low"
 	funds, err := svc.GetFundList(&riskLevel)
@@ -216,13 +221,14 @@ func TestGetFundListFiltersRiskLevel(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mock := &mockRepo{
+			mockRepo := &mockRepo{
 				getFundList: func() (*[]model.Fund, error) {
 					return &tt.fundList, nil
 				},
 			}
 
-			svc := service.New(mock, nil)
+			logger := logger.NewMockLogger()
+			svc := service.New(mockRepo, logger)
 
 			actual, err := svc.GetFundList(tt.riskLevel)
 

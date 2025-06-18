@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/oliknight1/retail-isa-investment/investment-service/internal"
+	"github.com/oliknight1/retail-isa-investment/investment-service/logger"
 	"github.com/oliknight1/retail-isa-investment/investment-service/model"
 	"github.com/oliknight1/retail-isa-investment/investment-service/service"
 )
@@ -53,7 +54,8 @@ func TestCreateInvestmentSuccess(t *testing.T) {
 		close: func() {},
 	}
 
-	svc := service.New(mockRepo, mockPub, nil)
+	logger := logger.NewMockLogger()
+	svc := service.New(mockRepo, mockPub, logger)
 
 	customerId := "cust-1"
 	fundId := "fund-1"
@@ -140,7 +142,9 @@ func TestCreateInvestmentFailures(t *testing.T) {
 				close: func() {},
 			}
 
-			svc := service.New(mockRepo, mockPub, nil)
+			logger := logger.NewMockLogger()
+			svc := service.New(mockRepo, mockPub, logger)
+
 			investment, err := svc.CreateInvestment(tt.customerId, tt.fundId, tt.amount)
 
 			if err == nil {
@@ -171,7 +175,8 @@ func TestGetInvestmentByIdSuccess(t *testing.T) {
 			return expected, nil
 		},
 	}
-	svc := service.New(mockRepo, nil, nil)
+	logger := logger.NewMockLogger()
+	svc := service.New(mockRepo, nil, logger)
 
 	actual, err := svc.GetInvestmentById("inv-1")
 	if err != nil {
@@ -188,7 +193,8 @@ func TestGetInvestmentByIdRepoFails(t *testing.T) {
 			return nil, errors.New("not found")
 		},
 	}
-	svc := service.New(mockRepo, nil, nil)
+	logger := logger.NewMockLogger()
+	svc := service.New(mockRepo, nil, logger)
 
 	_, err := svc.GetInvestmentById("missing-id")
 	if err == nil {
@@ -233,7 +239,9 @@ func TestGetInvestmentByCustomerIdSuccess(t *testing.T) {
 			return expected, nil
 		},
 	}
-	svc := service.New(mockRepo, nil, nil)
+	logger := logger.NewMockLogger()
+	svc := service.New(mockRepo, nil, logger)
+
 	actual, err := svc.GetInvestmentsByCustomerId("cust-1")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/oliknight1/retail-isa-investment/fund-service/handler"
 	"github.com/oliknight1/retail-isa-investment/fund-service/internal"
+	"github.com/oliknight1/retail-isa-investment/fund-service/logger"
 	"github.com/oliknight1/retail-isa-investment/fund-service/model"
 )
 
@@ -43,7 +44,8 @@ func TestGetFundByIdSuccess(t *testing.T) {
 			return &expectedFund, nil
 		},
 	}
-	handler := handler.FundHandler{Service: mockService}
+	logger := logger.NewMockLogger()
+	handler := handler.FundHandler{Service: mockService, Logger: logger}
 
 	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/funds/%s", id), nil)
 
@@ -71,7 +73,8 @@ func TestGetFundByIdMissingId(t *testing.T) {
 			return &model.Fund{}, internal.ErrMissingId
 		},
 	}
-	handler := &handler.FundHandler{Service: mockService}
+	logger := logger.NewMockLogger()
+	handler := handler.FundHandler{Service: mockService, Logger: logger}
 
 	req := httptest.NewRequest(http.MethodGet, "/funds/", nil)
 
@@ -96,7 +99,8 @@ func TestGetFundByIdINotFound(t *testing.T) {
 		},
 	}
 
-	handler := &handler.FundHandler{Service: mockService}
+	logger := logger.NewMockLogger()
+	handler := handler.FundHandler{Service: mockService, Logger: logger}
 
 	id := uuid.New().String()
 	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/funds/%s", id), nil)
@@ -161,7 +165,8 @@ func TestGetFundListHandler(t *testing.T) {
 				},
 			}
 
-			handler := handler.FundHandler{Service: mockService}
+			logger := logger.NewMockLogger()
+			handler := handler.FundHandler{Service: mockService, Logger: logger}
 			req := httptest.NewRequest(http.MethodGet, "/funds"+tt.queryParam, nil)
 			recorder := httptest.NewRecorder()
 
