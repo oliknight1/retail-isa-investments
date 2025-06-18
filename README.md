@@ -118,7 +118,6 @@ curl localhost:8080/investments/customer/<customerId>
 This uses Prometheus to scrape metrics from all the services, you can view the dashboard locally at
 http://localhost:9090
 
-The metrics surfaced are:
 Each service exposes useful custom metrics:
 
 ### Customer Service
